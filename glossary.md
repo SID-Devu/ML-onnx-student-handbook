@@ -314,6 +314,13 @@ Use your editor search (`Ctrl+F`) on this file. Terms are **brief** on purpose; 
 - **vm.overcommit_memory**: Kernel sysctl controlling malloc behavior; `1` = always allow; critical for large model loading (module 09).
 - **vm.swappiness**: Kernel sysctl controlling anonymous page swap aggressiveness; `10` = prefer keeping process data in RAM (module 09).
 - **vm.max_map_count**: Max VMAs per process; `2097152` prevents mapping exhaustion for large models (module 09).
+- **rocprofv3**: Modern AMD GPU profiling tool (ROCm 6.x+); replaces legacy `rocprof`; supports kernel-trace, hip-trace, sys-trace, CSV and Perfetto output (module 25).
+- **uftrace**: Function-level C/C++ tracing tool for Linux; traces calls in libmigraphx, libamdhip64, librocblas (module 25).
+- **Perfetto**: Google's trace visualization tool; view `.pftrace` files at ui.perfetto.dev (module 25).
+- **MIGRAPHX_DISABLE_MLIR**: Environment variable; set to `1` to disable MIGraphX MLIR compiler, exposing rocBLAS kernels for GEMMs (module 08).
+- **MIGRAPHX_SET_GEMM_PROVIDER**: Environment variable; `rocblas` or `hipblaslt`; forces GEMM provider choice (module 08).
+- **hipMemAdviseSetCoarseGrain**: HIP API setting coarse-grained coherence on managed memory; reduces per-access coherence overhead for read-only buffers (module 07).
+- **QuantFormat**: ORT quantization API enum; `QDQ` (QuantizeLinear/DequantizeLinear nodes) or `QOperator` (quantized ops); distinct from `QuantType` (module 06).
 
 ---
 

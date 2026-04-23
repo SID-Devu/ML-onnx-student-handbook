@@ -31,6 +31,7 @@ def main() -> None:
         import onnxruntime as ort
         from onnxruntime.quantization import (
             CalibrationDataReader,
+            QuantFormat,
             QuantType,
             quantize_static,
         )
@@ -65,7 +66,7 @@ def main() -> None:
         model_input=args.model_in.as_posix(),
         model_output=args.model_out.as_posix(),
         calibration_data_reader=_Reader(args.model_in, args.samples),
-        quant_format=QuantType.QInt8,
+        quant_format=QuantFormat.QDQ,
         per_channel=True,
         weight_type=QuantType.QInt8,
         activation_type=QuantType.QInt8,

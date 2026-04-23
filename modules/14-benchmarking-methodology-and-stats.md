@@ -65,7 +65,7 @@ dt_ms = (time.perf_counter() - t0) * 1000.0
 `time.perf_counter()` is:
 - **Monotonic** (never goes backwards)
 - **High resolution** (sub-microsecond on modern systems)
-- **Wall-clock time** (not CPU time)
+- **Elapsed real time** (not CPU time — use `time.process_time()` for CPU-only measurement)
 
 **Async GPU caveat:** if GPU work is asynchronous, wall time may undercount. ORT session.run() typically synchronizes at return for MIGraphX EP, but verify.
 
@@ -94,8 +94,8 @@ If you only reported mean (23.2 ms), you'd hide that runs 1-2 were consistent an
 | **Std (standard deviation)** | Spread around mean | Shows consistency |
 | **Min** | Smallest value | Best-case scenario |
 | **Max** | Largest value | Worst case; often caused by jitter |
-| **P95** | 95th percentile | "95% of runs are faster than this" |
-| **P99** | 99th percentile | Tail latency; SLA-relevant |
+| **P95** | 95th percentile | 95% of runs complete within this latency (only ~5% are slower) |
+| **P99** | 99th percentile | 99% within this; tail latency, SLA-relevant |
 
 **Report at minimum:** median + mean + std. For production: add P95/P99.
 
@@ -152,7 +152,7 @@ Every benchmark JSON should record:
     },
     "config": {
         "warmup": 3,
-        "runs": 10,
+        "runs": 3,
         "cooldown_s": 120,
         "providers": ["MIGraphXExecutionProvider"]
     },

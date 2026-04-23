@@ -21,7 +21,7 @@ Do these in order. **Edit paths** to point at ONNX files that exist on your mach
 - opset version
 - count of graph nodes
 - each graph input: name + shape dimension list (show `dim_param` or `dim_value` per axis)
-- whether external data is likely (heuristic: file ends with `.data` sibling exists)
+- whether external data is likely (heuristic: a sidecar file like `<model>.onnx.data` exists alongside)
 
 **Check:** output matches what Netron shows for the same model.
 
@@ -41,7 +41,7 @@ Do these in order. **Edit paths** to point at ONNX files that exist on your mach
 
 ## Exercise 4 — Dynamic shape audit
 
-**Goal:** Run `scripts/examples/check_dynamic_shapes.py` after editing `MODEL_ROOTS` / paths.
+**Goal:** Run `scripts/examples/check_dynamic_shapes.py` after editing `SEARCH_ROOTS` / paths.
 
 **Deliverable:** a text file listing every input that still has dynamic axes in your local zoo.
 

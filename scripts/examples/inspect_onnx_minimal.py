@@ -13,7 +13,7 @@ from onnx import TensorProto
 
 def main() -> None:
     # TODO: student — set this to a real file on your machine
-    model_path = Path("/home/sudhdevu/R1models/r1-ml-onnx-student-handbook/scripts/examples/REPLACE_ME.onnx")
+    model_path = Path("/home/sudhdevu/R1models/ML-onnx-student-handbook/scripts/examples/REPLACE_ME.onnx")
     if not model_path.exists():
         print(f"Edit MODEL_PATH. Missing file: {model_path}")
         return

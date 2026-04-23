@@ -72,7 +72,7 @@ Example sizes:
 | MobileNetV2 | ~3.4M params | ~14 MB |
 | YOLO v12m | ~20M params | ~80 MB |
 | CLIP ViT-B/32 | ~151M params | ~600 MB |
-| Qwen3-1.7B | ~1.7B params | ~3.4 GB (needs external data) |
+| Qwen3-1.7B | ~1.7B params | ~3.4 GB FP16 / ~6.8 GB FP32 (needs external data) |
 | DeepSeek-R1 | larger | even bigger |
 
 Each float32 parameter = 4 bytes. So 1 billion params ≈ 4 GB.

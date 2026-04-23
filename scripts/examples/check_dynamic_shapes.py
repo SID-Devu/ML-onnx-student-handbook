@@ -3,7 +3,7 @@
 List ONNX models under configured directories and report ORT input shapes.
 Dynamic dimensions show up as strings in session.get_inputs()[].shape.
 
-Requires: pip install onnxruntime onnx
+Requires: pip install onnxruntime
 Edit SEARCH_ROOTS to match your machine.
 """
 from __future__ import annotations

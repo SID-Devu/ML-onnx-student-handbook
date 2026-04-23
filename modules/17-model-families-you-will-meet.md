@@ -29,7 +29,7 @@ This maps **every model in your benchmark zoo** to its domain, architecture, inp
 | 19 | OCR | **EasyOCR** | CNN + LSTM/Transformer | Reads text in images |
 | 20 | 3D Detection | **CenterPoint** | CNN (pillar/voxel encoder) | Detects objects in 3D point clouds (LiDAR data) |
 | 21 | Navigation | **ViNT** | Transformer/CNN policy | Robot visual navigation |
-| 22 | Wav2Vec2 | **Wav2Vec2** | Transformer (self-supervised) | Audio representation learning / ASR features |
+| 22 | ASR (features) | **Wav2Vec2** | Transformer (self-supervised) | Audio representation learning / ASR features |
 | 23 | (others) | Various | Various | Your zoo may grow — apply the same analysis pattern |
 
 ---
@@ -128,39 +128,45 @@ This maps **every model in your benchmark zoo** to its domain, architecture, inp
 
 ## Pre-processing by domain — the code that runs BEFORE the model
 
-### Image pre-processing (YOLO, MobileNetV2, CLIP, EfficientNet, DeepSort)
+### Image pre-processing — YOLO (detection models)
+
+YOLO uses simple `/255` scaling, **not** ImageNet normalization:
 
 ```python
 import cv2
 import numpy as np
 
 img = cv2.imread("photo.jpg")                       # (H, W, 3) BGR uint8
-
-# 1. Resize to model's expected size
 img = cv2.resize(img, (640, 640))                    # YOLO expects 640x640
-
-# 2. BGR → RGB (OpenCV loads BGR, models expect RGB)
-img = img[:, :, ::-1]
-
-# 3. Normalize pixel values 0-255 → 0.0-1.0
-img = img.astype(np.float32) / 255.0
-
-# 4. ImageNet normalization (MobileNetV2, EfficientNet, CLIP)
-mean = np.array([0.485, 0.456, 0.406], dtype=np.float32)
-std  = np.array([0.229, 0.224, 0.225], dtype=np.float32)
-img = (img - mean) / std
-
-# 5. HWC → NCHW layout
-img = img.transpose(2, 0, 1)[np.newaxis, ...]       # (1, 3, H, W)
+img = img[:, :, ::-1]                                # BGR → RGB
+img = img.astype(np.float32) / 255.0                 # scale to [0, 1] — that's it
+img = img.transpose(2, 0, 1)[np.newaxis, ...]        # (1, 3, 640, 640)
 ```
 
-| Step | What | Code |
-|------|------|------|
-| Resize | Scale image to model input size | `cv2.resize(img, (640, 640))` |
-| Channel order | BGR (OpenCV) to RGB | `img = img[:, :, ::-1]` |
-| Normalize | Scale pixels 0-255 → 0.0-1.0 | `img = img / 255.0` |
-| ImageNet norm | Subtract mean, divide by std | `(img - [0.485, 0.456, 0.406]) / [0.229, 0.224, 0.225]` |
-| Layout | HWC to NCHW | `img.transpose(2, 0, 1)[np.newaxis, ...]` |
+### Image pre-processing — classification/embedding (MobileNetV2, EfficientNet, CLIP, DeepSort)
+
+These models use ImageNet mean/std normalization on 224x224 inputs:
+
+```python
+import cv2
+import numpy as np
+
+img = cv2.imread("photo.jpg")                        # (H, W, 3) BGR uint8
+img = cv2.resize(img, (224, 224))                     # classification models expect 224x224
+img = img[:, :, ::-1]                                 # BGR → RGB
+img = img.astype(np.float32) / 255.0                  # scale to [0, 1]
+mean = np.array([0.485, 0.456, 0.406], dtype=np.float32)
+std  = np.array([0.229, 0.224, 0.225], dtype=np.float32)
+img = (img - mean) / std                              # ImageNet normalization
+img = img.transpose(2, 0, 1)[np.newaxis, ...]         # (1, 3, 224, 224)
+```
+
+| Model type | Resize | Normalization | Layout |
+|------------|--------|--------------|--------|
+| YOLO (detection) | 640x640 | `/255.0` only | NCHW |
+| MobileNetV2, EfficientNet | 224x224 | `/255.0` then ImageNet mean/std | NCHW |
+| CLIP | 224x224 | `/255.0` then ImageNet mean/std | NCHW |
+| DeepSort (OSNet) | 128x256 or 256x128 | `/255.0` then ImageNet mean/std | NCHW |
 
 ### Audio pre-processing (Whisper, Wav2Vec2, XTTS)
 
@@ -172,7 +178,7 @@ import numpy as np
 # audio = librosa.resample(audio, orig_sr=44100, target_sr=16000)
 
 # 2. Mel spectrogram (Whisper) — converts waveform to frequency-domain
-# whisper uses 80 mel bins, 30s window → shape (1, 80, 3000)
+# whisper uses 80 mel bins; shape depends on audio length (e.g. 30s padded → (1, 80, 3000))
 
 # 3. Padding/trimming — ensure fixed-length input
 target_len = 16000 * 30  # 30 seconds at 16kHz

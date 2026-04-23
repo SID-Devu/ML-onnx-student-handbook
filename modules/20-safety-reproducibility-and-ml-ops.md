@@ -17,7 +17,10 @@ Some older weight formats (PyTorch `.pth`, HuggingFace `.bin`) use **Python pick
 import torch
 model = torch.load("untrusted_model.pth")  # can run arbitrary code!
 
-# SAFE — SafeTensors
+# SAFER — restrict to weights only (PyTorch 2.6+)
+model = torch.load("model.pth", weights_only=True)  # blocks code execution
+
+# SAFEST — SafeTensors (no pickle at all)
 from safetensors.torch import load_file
 weights = load_file("model.safetensors")  # only loads tensors, no code execution
 ```

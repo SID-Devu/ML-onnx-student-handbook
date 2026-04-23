@@ -10,7 +10,7 @@ Set in `/etc/environment` for system-wide persistence:
 HSA_XNACK=1
 ```
 
-This ensures **every** process on the system sees `HSA_XNACK=1`, not just your shell.
+This ensures **login sessions** see `HSA_XNACK=1` (via PAM). Note: systemd services do **not** automatically inherit `/etc/environment` — use `EnvironmentFile=` in unit files or set vars in the service script.
 
 ### Critical environment variables in your setup
 

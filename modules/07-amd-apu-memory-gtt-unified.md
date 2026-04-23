@@ -242,6 +242,37 @@ dmesg | grep -ci "svm"
 
 ---
 
+## 14. XNACK=0 vs XNACK=1 — performance tradeoffs (measured)
+
+On OpenVLA-7B (14 GB model on Strix Halo with 32 GB unified memory):
+
+| Metric | XNACK=1 (demand paging) | XNACK=0 (explicit) | Winner |
+|--------|-------------------------|---------------------|--------|
+| GPU kernel compute | 1,696 ms | 1,603 ms | XNACK=0 (-5.5%) |
+| Memory copies (H2D) | 220 ms | 421 ms | XNACK=1 (-48%) |
+| Memory allocation | 1,339 ms | 1,084 ms | XNACK=0 (-19%) |
+| Memory free | 184 ms | 99 ms | XNACK=0 (-46%) |
+
+**Rule of thumb:**
+- **XNACK=0 is faster** when the model fits in available memory (no oversubscription) — avoids TLB page-fault overhead on every kernel dispatch
+- **XNACK=1 is essential** when the model oversubscribes GPU memory — the GPU can demand-page from system RAM instead of crashing with out-of-memory
+
+For your 28 GB GTT: models under ~25 GB → prefer XNACK=0. Models that exceed available memory → must use XNACK=1.
+
+---
+
+## 15. `hipMemAdviseSetCoarseGrain` — coherence optimization
+
+When using `hipMallocManaged`, the default is fine-grained coherence (CPU and GPU see each other's writes immediately). For read-only weights, **coarse-grained** coherence avoids the per-access coherence overhead:
+
+```c
+hipMemAdviseSetCoarseGrain(ptr, size, device);
+```
+
+Your custom ORT build uses this for weight buffers that don't change after loading. This reduces memory access latency for large models on unified memory.
+
+---
+
 ## Module 07 checklist
 
 - [ ] Explain VRAM carve-out (512 MB) vs GTT (28 GB) in your own words

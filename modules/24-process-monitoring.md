@@ -71,13 +71,17 @@ kill <PID from above>
 
 ```bash
 # Start benchmark with high priority (lower nice = higher priority)
-nice -n -10 python benchmark_cooldown.py
+# Negative nice values require root or CAP_SYS_NICE
+sudo nice -n -10 python benchmark_cooldown.py
 
 # Change priority of running process
-renice -n -10 -p <PID>
+sudo renice -n -10 -p <PID>
+
+# Without root, you can only lower priority (raise nice value)
+nice -n 5 python benchmark_cooldown.py
 ```
 
-Nice values: -20 (highest priority) to 19 (lowest). Default is 0.
+Nice values: -20 (highest priority) to 19 (lowest). Default is 0. **Negative values require root.**
 
 ---
 

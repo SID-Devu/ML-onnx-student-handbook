@@ -102,9 +102,9 @@ Sets readahead to **2048 KB** (2 MB) — the OS pre-fetches 2 MB of upcoming dis
 ### e) MGLRU — enable modern page reclaim
 
 ```bash
-# Enable MGLRU (exact sysctl path varies by kernel version)
+# Enable MGLRU via sysfs (standard path on Linux 6.1+)
 echo Y > /sys/kernel/mm/lru_gen/enabled
-# or: sysctl -w vm.lru_gen.enabled=7
+# Verify: cat /sys/kernel/mm/lru_gen/enabled  →  should show 0x0007 or similar
 ```
 
 ---

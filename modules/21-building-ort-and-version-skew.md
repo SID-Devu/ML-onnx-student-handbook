@@ -158,4 +158,4 @@ pip install your_custom_wheel.whl                            # install yours
 - [ ] Know to capture CMake flags in your team's build docs
 - [ ] Can explain why mixing pip wheels with custom `.so` files is dangerous
 
-**End of numbered modules.**
+**Next:** `22-shell-bash-for-ml-workflows.md` (practical tooling modules 22–25)

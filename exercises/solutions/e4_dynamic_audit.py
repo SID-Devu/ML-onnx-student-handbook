@@ -43,7 +43,7 @@ def main() -> None:
             if path.name.endswith(".onnx.data"):
                 continue
             # Skip files inside the handbook itself (the template scripts)
-            if "r1-ml-onnx-student-handbook" in path.parts:
+            if "ML-onnx-student-handbook" in path.parts:
                 continue
             total_models += 1
             try:

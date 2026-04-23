@@ -91,7 +91,7 @@ git blame benchmark_cooldown.py
 ## 7. `.gitignore` — don't track large/sensitive files
 
 ```
-# .gitignore for ML projects
+# .gitignore for ML projects (when NOT using Git LFS for models)
 *.onnx
 *.onnx.data
 *.bin
@@ -105,19 +105,23 @@ results/
 .env
 ```
 
-**Never commit model weights to git** — they're too large and change rarely.
+**Never commit model weights directly to git** — they're too large and bloat history.
+
+**Choose one approach:**
+- **Option A (most projects):** `.gitignore` the weights. Store models elsewhere (HuggingFace Hub, shared drive, cloud).
+- **Option B (Git LFS):** If models *must* live in the repo, remove `*.onnx` from `.gitignore` and use LFS instead (see below).
 
 ---
 
-## 8. Git LFS — large file storage
+## 8. Git LFS — large file storage (alternative to .gitignore)
 
-For ONNX models that must be in the repo:
+If ONNX models must be version-controlled in the repo, **remove `*.onnx` from `.gitignore`** and use LFS:
 
 ```bash
 git lfs install                      # one-time setup
 git lfs track "*.onnx"               # track ONNX files with LFS
 git add .gitattributes               # commit the tracking config
-git add model.onnx
+git add model.onnx                   # works because *.onnx is NOT in .gitignore
 git commit -m "Add model via LFS"
 git push
 ```

@@ -187,6 +187,8 @@ For investigating whether a model fits in GTT without swap:
 
 ```python
 import os
+import numpy as np
+import onnxruntime as ort
 
 def get_memory_usage_mb():
     """Read current process RSS from /proc."""
@@ -197,8 +199,10 @@ def get_memory_usage_mb():
     return 0
 
 before = get_memory_usage_mb()
-session = ort.InferenceSession("model.onnx", providers=[...])
+session = ort.InferenceSession("model.onnx", providers=["CPUExecutionProvider"])
 after_load = get_memory_usage_mb()
+inp = session.get_inputs()[0]
+feed = {inp.name: np.zeros([1 if isinstance(d, str) else d for d in inp.shape], dtype=np.float32)}
 session.run(None, feed)
 after_run = get_memory_usage_mb()
 

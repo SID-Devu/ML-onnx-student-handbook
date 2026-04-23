@@ -92,7 +92,6 @@ rocm-smi --showtemp               # GPU temperature
 rocm-smi --showclocks             # Current clock speeds (sclk, mclk)
 rocm-smi --showmeminfo all        # VRAM and GTT usage
 rocm-smi --showall                # Everything at once
-rocm-smi --showclocks             # Verify clocks during inference
 rocm-smi --setperflevel high      # Lock GPU to max performance
 ```
 
@@ -182,7 +181,36 @@ If many `Transpose` nodes appear in the optimized graph, the model may benefit f
 
 ---
 
-## 10. Thermal throttling — the benchmark killer
+## 10. MIGraphX environment variables — MLIR vs rocBLAS
+
+MIGraphX uses its **MLIR compiler** by default to fuse operations (including GEMMs) into single kernels. You can override this to use hand-tuned **rocBLAS Tensile kernels** instead:
+
+```bash
+export MIGRAPHX_DISABLE_MLIR=1            # disable MLIR fusion; GEMMs go to rocBLAS
+export MIGRAPHX_SET_GEMM_PROVIDER=rocblas  # force rocBLAS for GEMM ops
+```
+
+Or via `benchmark_cooldown.py`:
+
+```bash
+python benchmark_cooldown.py --ep migraphx --disable-mlir --gemm-provider rocblas --warmup 3 --runs 3
+```
+
+**Performance impact (measured on OpenVLA-7B, gfx1151):**
+
+| Mode | Total GPU kernel time | GEMM avg per call |
+|------|-----------------------|-------------------|
+| MLIR (default) | 1,798 ms | 1.98 ms |
+| rocBLAS (MLIR disabled) | 1,594 ms | 1.72 ms |
+| **Delta** | **-11.4% faster** | **-13% faster** |
+
+On gfx1151 (RDNA 3.5), rocBLAS Tensile kernels are faster for GEMMs because they are hand-tuned for the ISA. Non-GEMM kernels (conv, softmax, sigmoid) are unaffected.
+
+**When to try this:** If your model is GEMM-heavy (transformers, LLMs, VLMs), test with `--disable-mlir --gemm-provider rocblas` and compare.
+
+---
+
+## 11. Thermal throttling — the benchmark killer
 
 When GPU temperature exceeds limits:
 

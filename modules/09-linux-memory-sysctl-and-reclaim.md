@@ -234,7 +234,7 @@ cat /sys/kernel/mm/transparent_hugepage/enabled
 
 ```bash
 cat /sys/kernel/mm/lru_gen/enabled
-# 7 = all features enabled
+# Shows 0x0007 (or 7) when all features enabled
 ```
 
 ### Monitor swap activity during benchmark

@@ -8,6 +8,7 @@ then compares clocks and temperatures.
 Run:  python e7_rocm_snapshot.py
 Requires: rocm-smi in PATH, onnxruntime with MIGraphXExecutionProvider or
           CPUExecutionProvider (falls back to CPU stress if no GPU EP).
+          GPU stress path also requires: pip install onnx
 """
 from __future__ import annotations
 

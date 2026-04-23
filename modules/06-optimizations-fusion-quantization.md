@@ -173,30 +173,30 @@ MIGraphX then compiles a single optimized kernel for that exact shape instead of
 ### Install
 
 ```bash
-pip install onnxruntime-extensions
+pip install onnxruntime
+# onnxruntime-extensions is only needed if your quantization path uses custom ops
 ```
 
 ### Full quantization script
 
 ```python
 import numpy as np
-from onnxruntime.quantization import quantize_static, CalibrationDataReader, QuantType
+from onnxruntime.quantization import quantize_static, CalibrationDataReader, QuantFormat, QuantType
 
 class ImageCalibrationReader(CalibrationDataReader):
     """Feeds sample images to calibrate INT8 ranges."""
     def __init__(self, model_path, num_samples=100):
         import onnxruntime as ort
-        session = ort.InferenceSession(model_path)
+        session = ort.InferenceSession(model_path, providers=["CPUExecutionProvider"])
         self.input_name = session.get_inputs()[0].name
-        self.input_shape = session.get_inputs()[0].shape  # e.g. [1,3,640,640]
+        raw_shape = session.get_inputs()[0].shape  # e.g. [1,3,640,640] or ['batch',3,'h','w']
+        self.input_shape = [1 if isinstance(d, str) or d is None else int(d) for d in raw_shape]
         self.num_samples = num_samples
         self.index = 0
 
     def get_next(self):
         if self.index >= self.num_samples:
             return None
-        # Replace with real images for best accuracy
-        # Random data works for testing the pipeline only
         data = {self.input_name: np.random.randn(*self.input_shape).astype(np.float32)}
         self.index += 1
         return data
@@ -209,8 +209,8 @@ quantize_static(
     model_input=model_fp32,
     model_output=model_int8,
     calibration_data_reader=ImageCalibrationReader(model_fp32),
-    quant_format=QuantType.QInt8,
-    per_channel=True,          # Better accuracy than per-tensor
+    quant_format=QuantFormat.QDQ,   # QDQ (QuantizeLinear/DequantizeLinear nodes) or QOperator
+    per_channel=True,               # Better accuracy than per-tensor
     weight_type=QuantType.QInt8,
     activation_type=QuantType.QInt8,
 )
@@ -341,10 +341,10 @@ from onnxruntime.transformers import optimizer
 
 optimized_model = optimizer.optimize_model(
     "qwen3/qwen3-1.7b.onnx",
-    model_type="gpt2",           # or "bert" for encoder models like CLIP
+    model_type="gpt2",           # ORT label for causal-decoder graphs (Qwen, Llama, GPT-like)
     num_heads=16,                 # from config.json
     hidden_size=2048,             # from config.json
-    use_gpu=True,
+    use_gpu=False,                # True targets CUDA; for ROCm/MIGraphX keep False
     opt_level=2                   # aggressive fusion
 )
 optimized_model.save_model_to_file("qwen3/qwen3-1.7b_fused.onnx")
@@ -354,7 +354,7 @@ optimized_model.save_model_to_file("qwen3/qwen3-1.7b_fused.onnx")
 
 | Model | `model_type` | `num_heads` | `hidden_size` |
 |-------|-------------|-------------|---------------|
-| Qwen3-1.7B | `"gpt2"` | 16 | 2048 |
+| Qwen3-1.7B | `"gpt2"` (ORT label for causal-decoder architectures) | 16 | 2048 |
 | CLIP ViT-B/32 | `"bert"` | 12 | 768 |
 | CLIP ViT-B/16 | `"bert"` | 12 | 768 |
 | CrossFormer | `"bert"` | Check config.json | Check config.json |
